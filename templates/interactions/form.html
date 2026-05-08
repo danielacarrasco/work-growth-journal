@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}{% if interaction %}Edit interaction{% else %}Log interaction{% endif %} — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/interactions">Interactions</a>
+    <span class="sep">/</span>
+    <span>{% if interaction %}Edit{% else %}Log{% endif %}</span>
+  </div>
+  <h1>{% if interaction %}Edit interaction{% else %}Log an interaction{% endif %}</h1>
+  <p class="subtitle">Capture what happened and how you showed up. Aim for under 3 minutes.</p>
+</div>
+
+<div class="page-body">
+  <form method="post" action="{{ form_action }}">
+
+    <!-- Essentials -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input type="text" id="title" name="title" class="form-control" required
+               value="{{ interaction.title if interaction else '' }}"
+               placeholder="e.g. MDG SteerCo, 1:1 with Alex">
+      </div>
+      <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" class="form-control"
+               value="{{ interaction.date.strftime('%Y-%m-%d') if interaction else now.strftime('%Y-%m-%d') }}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="interaction_type">Type</label>
+        <select id="interaction_type" name="interaction_type" class="form-control">
+          {% for opt in ['meeting','1:1','slack','email','workshop','presentation','informal','other'] %}
+            <option value="{{ opt }}" {% if interaction and interaction.interaction_type == opt %}selected{% endif %}>
+              {{ opt | title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="project_id">Project / Context</label>
+        <select id="project_id" name="project_id" class="form-control">
+          <option value="">— none —</option>
+          {% for p in projects %}
+            <option value="{{ p.id }}" {% if selected_project_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {% if stakeholders %}
+    <div class="form-group">
+      <label>Stakeholders involved</label>
+      <div class="multi-select">
+        {% for s in stakeholders %}
+        <div class="multi-select-item">
+          <input type="checkbox" name="stakeholder_ids" value="{{ s.id }}" id="s_{{ s.id }}"
+                 {% if s.id in selected_stakeholder_ids %}checked{% endif %}>
+          <label for="s_{{ s.id }}">
+            {{ s.name }}
+            <span class="item-meta">{% if s.role_title %}{{ s.role_title }}{% endif %}</span>
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- What happened -->
+    <div class="form-section">
+      <p class="form-section-title">What happened</p>
+
+      <div class="form-group">
+        <label for="user_goal">Your goal going in</label>
+        <textarea id="user_goal" name="user_goal" class="form-control" rows="2"
+          placeholder="What were you trying to achieve?">{{ interaction.user_goal if interaction and interaction.user_goal else '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="what_happened">What happened</label>
+        <textarea id="what_happened" name="what_happened" class="form-control" rows="3"
+          placeholder="Factual summary of the interaction.">{{ interaction.what_happened if interaction and interaction.what_happened else '' }}</textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="what_was_said">What was said</label>
+          <textarea id="what_was_said" name="what_was_said" class="form-control" rows="2"
+            placeholder="Key things that were actually said.">{{ interaction.what_was_said if interaction and interaction.what_was_said else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="what_was_unsaid">What was unsaid</label>
+          <textarea id="what_was_unsaid" name="what_was_unsaid" class="form-control" rows="2"
+            placeholder="What was present but not named?">{{ interaction.what_was_unsaid if interaction and interaction.what_was_unsaid else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="actual_outcome">Actual outcome</label>
+        <textarea id="actual_outcome" name="actual_outcome" class="form-control" rows="2"
+          placeholder="What actually happened as a result?">{{ interaction.actual_outcome if interaction and interaction.actual_outcome else '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Readings -->
+    <div class="form-section">
+      <p class="form-section-title">Readings</p>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Tension level (1–5)</label>
+          <div class="rating-group">
+            {% for n in range(1,6) %}
+              <input type="radio" name="tension_level" id="tl_{{ n }}" value="{{ n }}"
+                {% if interaction and interaction.tension_level == n %}checked{% endif %}>
+              <label for="tl_{{ n }}">{{ n }}</label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confidence level (1–5)</label>
+          <div class="rating-group">
+            {% for n in range(1,6) %}
+              <input type="radio" name="confidence_level" id="cl_{{ n }}" value="{{ n }}"
+                {% if interaction and interaction.confidence_level == n %}checked{% endif %}>
+              <label for="cl_{{ n }}">{{ n }}</label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Clarity level (1–5)</label>
+          <div class="rating-group">
+            {% for n in range(1,6) %}
+              <input type="radio" name="clarity_level" id="cll_{{ n }}" value="{{ n }}"
+                {% if interaction and interaction.clarity_level == n %}checked{% endif %}>
+              <label for="cll_{{ n }}">{{ n }}</label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Self-reflection -->
+    <div class="form-section">
+      <p class="form-section-title">How I showed up</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="emotional_response">Emotional response</label>
+          <textarea id="emotional_response" name="emotional_response" class="form-control" rows="2"
+            placeholder="What did you feel? What was the internal experience?">{{ interaction.emotional_response if interaction and interaction.emotional_response else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="leadership_behaviour">Leadership behaviour</label>
+          <textarea id="leadership_behaviour" name="leadership_behaviour" class="form-control" rows="2"
+            placeholder="How did you behave? What did you do well or poorly?">{{ interaction.leadership_behaviour if interaction and interaction.leadership_behaviour else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="shrink_expand_rating">Shrink / expand rating</label>
+        <select id="shrink_expand_rating" name="shrink_expand_rating" class="form-control">
+          {% for opt, label in [('strongly_shrank','Strongly shrank'),('shrank','Shrank'),('neutral','Neutral'),('expanded','Expanded'),('strongly_expanded','Strongly expanded')] %}
+            <option value="{{ opt }}" {% if (interaction and interaction.shrink_expand_rating == opt) or (not interaction and opt == 'neutral') %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+        <p class="hint">Did you take up more or less space than the situation required?</p>
+      </div>
+
+      <div class="form-group">
+        <label>What I did</label>
+        <div class="checkbox-group">
+          {% for field, label in [
+            ('did_overexplain', 'Over-explained'),
+            ('did_soften_message', 'Softened the message'),
+            ('did_hold_boundary', 'Held a boundary'),
+            ('did_avoid_ask', 'Avoided making an ask'),
+            ('did_claim_authority', 'Claimed authority clearly')
+          ] %}
+          <div class="checkbox-item">
+            <input type="checkbox" name="{{ field }}" id="{{ field }}"
+                   {% if interaction and getattr(interaction, field) %}checked{% endif %}>
+            <label for="{{ field }}">{{ label }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="what_i_wanted_to_say">What I wanted to say</label>
+          <textarea id="what_i_wanted_to_say" name="what_i_wanted_to_say" class="form-control" rows="2"
+            placeholder="The direct version that stayed inside.">{{ interaction.what_i_wanted_to_say if interaction and interaction.what_i_wanted_to_say else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="what_i_actually_said">What I actually said</label>
+          <textarea id="what_i_actually_said" name="what_i_actually_said" class="form-control" rows="2"
+            placeholder="The version that came out.">{{ interaction.what_i_actually_said if interaction and interaction.what_i_actually_said else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="what_i_would_do_next_time">What I would do next time</label>
+        <textarea id="what_i_would_do_next_time" name="what_i_would_do_next_time" class="form-control" rows="2"
+          placeholder="One specific thing to do differently.">{{ interaction.what_i_would_do_next_time if interaction and interaction.what_i_would_do_next_time else '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Follow-up -->
+    <div class="form-section">
+      <p class="form-section-title">Follow-up</p>
+
+      <div class="form-group">
+        <label for="next_action">Next action</label>
+        <textarea id="next_action" name="next_action" class="form-control" rows="2"
+          placeholder="What are you going to do next?">{{ interaction.next_action if interaction and interaction.next_action else '' }}</textarea>
+      </div>
+
+      <div class="checkbox-item">
+        <input type="checkbox" name="needs_documentation" id="needs_documentation"
+               {% if interaction and interaction.needs_documentation %}checked{% endif %}>
+        <label for="needs_documentation">This interaction needs documentation (decision record, email trail, etc.)</label>
+      </div>
+    </div>
+
+    <div class="flex gap-8 mt-24">
+      <button type="submit" class="btn btn-primary btn-lg">{% if interaction %}Save changes{% else %}Save interaction{% endif %}</button>
+      <a href="{% if interaction %}/interactions/{{ interaction.id }}{% else %}/interactions{% endif %}" class="btn btn-secondary btn-lg">Cancel</a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

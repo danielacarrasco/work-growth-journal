@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}{{ stakeholder.name }} — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/stakeholders">Stakeholders</a>
+    <span class="sep">/</span>
+    <span>{{ stakeholder.name }}</span>
+  </div>
+  <div class="flex-between">
+    <div>
+      <h1>{{ stakeholder.name }}</h1>
+      <p class="subtitle">
+        {% if stakeholder.role_title %}{{ stakeholder.role_title }}{% endif %}
+        {% if stakeholder.team_or_area %} &middot; {{ stakeholder.team_or_area }}{% endif %}
+      </p>
+    </div>
+    <div class="flex gap-8">
+      {% if ai_enabled %}
+      <form method="post" action="/stakeholders/{{ stakeholder.id }}/generate-update">
+        <button type="submit" class="btn btn-secondary btn-sm">Update profile from logs</button>
+      </form>
+      {% endif %}
+      <a href="/stakeholders/{{ stakeholder.id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
+      <form method="post" action="/stakeholders/{{ stakeholder.id }}/delete" onsubmit="return confirm('Delete {{ stakeholder.name }}? This cannot be undone.')">
+        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+
+    <!-- Main profile -->
+    <div>
+      <div class="card">
+        <div class="flex gap-8 mb-16">
+          {% if stakeholder.relationship_type and stakeholder.relationship_type != 'unknown' %}
+            <span class="tag">{{ stakeholder.relationship_type }}</span>
+          {% endif %}
+          <span class="tag {% if stakeholder.influence_level in ['high','very_high'] %}tag-accent{% endif %}">
+            {{ stakeholder.influence_level | replace('_',' ') }} influence
+          </span>
+          <span class="tag {% if stakeholder.trust_level == 'high' %}tag-accent{% elif stakeholder.trust_level == 'low' %}tag-danger{% endif %}">
+            {{ stakeholder.trust_level }} trust
+          </span>
+          {% if stakeholder.preferred_detail_level and stakeholder.preferred_detail_level != 'unknown' %}
+            <span class="tag">{{ stakeholder.preferred_detail_level }} detail</span>
+          {% endif %}
+          {% if stakeholder.ambiguity_tolerance and stakeholder.ambiguity_tolerance != 'unknown' %}
+            <span class="tag">{{ stakeholder.ambiguity_tolerance }} ambiguity tolerance</span>
+          {% endif %}
+        </div>
+
+        {% macro field(label, value) %}
+          {% if value %}
+          <div class="detail-field">
+            <span class="detail-label">{{ label }}</span>
+            <div class="detail-value">{{ value }}</div>
+          </div>
+          {% endif %}
+        {% endmacro %}
+
+        {{ field("Stated goals", stakeholder.stated_goals) }}
+        {{ field("Likely incentives", stakeholder.likely_incentives) }}
+        {{ field("Communication style", stakeholder.communication_style) }}
+
+        <hr class="divider">
+
+        {{ field("What they care about", stakeholder.what_they_care_about) }}
+        {{ field("What they resist", stakeholder.what_they_resist) }}
+        {{ field("What earns trust", stakeholder.what_earns_trust) }}
+        {{ field("Tension triggers", stakeholder.tension_triggers) }}
+
+        {% if stakeholder.notes %}
+          <hr class="divider">
+          {{ field("Notes", stakeholder.notes) }}
+        {% endif %}
+      </div>
+
+      <!-- AI summary -->
+      {% if stakeholder.ai_summary %}
+      <div style="margin-top: 24px;">
+        <span class="ai-label">AI profile update — based on logged interactions</span>
+        <div class="ai-output">{{ stakeholder.ai_summary }}</div>
+      </div>
+      {% elif not ai_enabled %}
+      <div class="notice notice-warning mt-16">
+        AI is disabled. Enable it in <a href="/settings">Settings</a> to generate a profile update from your interaction logs.
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Sidebar: interactions -->
+    <div>
+      <span class="home-section-title">Recent interactions</span>
+      {% if interactions %}
+        <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+          {% for i in interactions %}
+          <li class="item-row" style="padding: 12px 16px;">
+            <div>
+              <p class="item-title" style="font-size:0.875rem;"><a href="/interactions/{{ i.id }}">{{ i.title }}</a></p>
+              <p class="item-meta">{{ i.date.strftime('%d %b %Y') }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted text-small">No interactions logged yet involving {{ stakeholder.name }}.</p>
+      {% endif %}
+
+      <div style="margin-top: 16px;">
+        <a href="/interactions/new" class="btn btn-secondary btn-sm w-full" style="justify-content: center;">
+          Log an interaction
+        </a>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <span style="font-size:0.75rem; color: var(--text-light);">Updated {{ stakeholder.updated_at.strftime('%d %b %Y') if stakeholder.updated_at else 'never' }}</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

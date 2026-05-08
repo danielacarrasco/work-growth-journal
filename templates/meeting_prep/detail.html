@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ prep.meeting_title }} — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/meeting-prep">Meeting Prep</a>
+    <span class="sep">/</span>
+    <span>{{ prep.meeting_title }}</span>
+  </div>
+  <div class="flex-between">
+    <div>
+      <h1>{{ prep.meeting_title }}</h1>
+      <p class="subtitle">
+        {% if prep.meeting_date %}{{ prep.meeting_date.strftime('%d %B %Y') }} &middot; {% endif %}
+        {% if prep.stakeholders %}
+          {% for s in prep.stakeholders %}{{ s.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+        {% endif %}
+        {% if prep.project %} &middot; {{ prep.project.name }}{% endif %}
+      </p>
+    </div>
+    <div class="flex gap-8">
+      {% if ai_enabled %}
+      <form method="post" action="/meeting-prep/{{ prep.id }}/generate">
+        <button type="submit" class="btn btn-primary btn-sm">
+          {% if prep.generated_strategy %}Regenerate brief{% else %}Generate brief{% endif %}
+        </button>
+      </form>
+      {% endif %}
+      <form method="post" action="/meeting-prep/{{ prep.id }}/delete" onsubmit="return confirm('Delete this meeting prep?')">
+        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+
+    <!-- Context -->
+    <div>
+      <div class="card">
+        {% macro field(label, value) %}
+          {% if value %}
+          <div class="detail-field">
+            <span class="detail-label">{{ label }}</span>
+            <div class="detail-value">{{ value }}</div>
+          </div>
+          {% endif %}
+        {% endmacro %}
+
+        {{ field("Desired outcome", prep.desired_outcome) }}
+        {{ field("Likely resistance", prep.likely_resistance) }}
+        {{ field("Emotional risk", prep.emotional_risk) }}
+        {{ field("What I am tempted to do badly", prep.what_i_am_tempted_to_do_badly) }}
+
+        {% if prep.advisor_voices %}
+        <div class="detail-field">
+          <span class="detail-label">Advisor voices</span>
+          <div class="flex gap-8 mt-4" style="flex-wrap:wrap;">
+            {% for v in prep.advisor_voices.split(',') %}
+              <span class="tag tag-accent">{{ v | replace('_',' ') | title }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Stakeholders -->
+      {% if prep.stakeholders %}
+      <div style="margin-top: 16px;">
+        <span class="home-section-title">Stakeholders</span>
+        <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+          {% for s in prep.stakeholders %}
+          <li class="item-row" style="padding: 10px 16px;">
+            <div>
+              <p class="item-title" style="font-size:0.875rem;"><a href="/stakeholders/{{ s.id }}">{{ s.name }}</a></p>
+              <p class="item-meta">{{ s.role_title }} &middot; {{ s.relationship_type }}</p>
+            </div>
+            <div class="flex gap-6">
+              <span class="tag {% if s.trust_level == 'high' %}tag-accent{% elif s.trust_level == 'low' %}tag-danger{% endif %}">{{ s.trust_level }} trust</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if not ai_enabled %}
+      <div class="notice notice-warning mt-16">
+        AI is disabled. Enable it in <a href="/settings">Settings</a> to generate a meeting prep brief.
+        The manual prep prompts are still useful — refer to them in your own notes.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Generated brief -->
+    <div>
+      {% if prep.generated_strategy %}
+        <span class="ai-label">Generated prep brief</span>
+        <div class="ai-output">{{ prep.generated_strategy }}</div>
+      {% else %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 24px; text-align: center;">
+          <p style="font-family: var(--font); color: var(--text-muted); font-size: 1rem; margin: 0 0 16px;">
+            No brief generated yet.
+          </p>
+          {% if ai_enabled %}
+          <form method="post" action="/meeting-prep/{{ prep.id }}/generate">
+            <button type="submit" class="btn btn-primary">Generate meeting brief</button>
+          </form>
+          {% else %}
+          <p class="text-muted text-small">Enable AI in <a href="/settings">Settings</a> to generate a brief.</p>
+          {% endif %}
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-light); text-align: left;">
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 10px;">Manual prep checklist:</p>
+            <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 20px; margin: 0; line-height: 1.8;">
+              <li>What is my one objective?</li>
+              <li>What does each person in the room want?</li>
+              <li>Where am I likely to shrink or over-explain?</li>
+              <li>What is my opening?</li>
+              <li>What are my three key points?</li>
+              <li>Where will I hold firm?</li>
+              <li>What is my next action after?</li>
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Meeting Prep — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="flex-between">
+    <div>
+      <h1>Meeting Prep</h1>
+      <p class="subtitle">Arrive clear on what you want, what to watch, and where to hold firm.</p>
+    </div>
+    <a href="/meeting-prep/new" class="btn btn-primary">Prepare a meeting</a>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  {% if preps %}
+    <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+      {% for prep in preps %}
+      <li class="item-row">
+        <div style="flex:1;">
+          <p class="item-title"><a href="/meeting-prep/{{ prep.id }}">{{ prep.meeting_title }}</a></p>
+          <p class="item-meta">
+            {% if prep.meeting_date %}{{ prep.meeting_date.strftime('%d %b %Y') }} &middot; {% endif %}
+            {% if prep.stakeholders %}
+              {% for s in prep.stakeholders[:3] %}{{ s.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+              {% if prep.stakeholders|length > 3 %} +{{ prep.stakeholders|length - 3 }}{% endif %}
+            {% endif %}
+            {% if prep.project %} &middot; {{ prep.project.name }}{% endif %}
+          </p>
+        </div>
+        <div class="flex gap-8" style="flex-shrink:0; align-items:center;">
+          {% if prep.generated_strategy %}
+            <span class="tag tag-accent">brief ready</span>
+          {% else %}
+            <span class="tag tag-warm">not prepared</span>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <p>No meeting preps yet.</p>
+      <a href="/meeting-prep/new" class="btn btn-primary">Prepare your first meeting</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

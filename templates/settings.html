@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Settings — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Settings</h1>
+  <p class="subtitle">Privacy, AI configuration, and data management.</p>
+</div>
+
+<div class="page-body">
+
+  <!-- AI settings -->
+  <div class="card mb-24">
+    <h2 class="card-title mb-16">AI settings</h2>
+    <form method="post" action="/settings">
+      <div class="form-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="ai_enabled" name="ai_enabled"
+                 {% if settings.ai_enabled %}checked{% endif %}>
+          <label for="ai_enabled">Enable AI features</label>
+        </div>
+        <p class="hint mt-4">
+          When enabled, Work Mirror will use OpenAI to generate stakeholder updates, political weather reports, self-pattern insights, and meeting prep briefs.
+          The app works fully without AI — you can still log, review, and reflect manually.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="openai_model">OpenAI model</label>
+        <select id="openai_model" name="openai_model" class="form-control" style="max-width: 240px;">
+          {% for m in ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4'] %}
+            <option value="{{ m }}" {% if settings.openai_model == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+        <p class="hint">gpt-4o is recommended. Set your API key in the <code>.env</code> file.</p>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Save settings</button>
+    </form>
+  </div>
+
+  <!-- Privacy notice -->
+  <div class="card mb-24">
+    <h2 class="card-title mb-8">Privacy</h2>
+    <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0 0 12px;">
+      All data is stored locally in a SQLite database on this machine. Nothing is sent to external services unless AI features are enabled, in which case interaction content is sent to OpenAI for analysis.
+    </p>
+    <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0;">
+      If AI is disabled, no data leaves your machine.
+    </p>
+  </div>
+
+  <!-- Export -->
+  <div class="card mb-24">
+    <h2 class="card-title mb-8">Export data</h2>
+    <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0 0 16px;">
+      Export all your data as a JSON file. This includes all stakeholders, projects, interactions, patterns, and meeting preps.
+    </p>
+    <a href="/settings/export" class="btn btn-secondary">Export all data as JSON</a>
+  </div>
+
+  <!-- Seed data -->
+  <div class="card mb-24">
+    <h2 class="card-title mb-8">Example data</h2>
+    <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0 0 16px;">
+      Load example stakeholders, projects, and interactions to explore the app. Delete them from the individual pages when you&rsquo;re ready to start your own log.
+    </p>
+    <form method="post" action="/settings/seed" onsubmit="return confirm('Load example data? This will not overwrite existing data.')">
+      <button type="submit" class="btn btn-secondary">Load example data</button>
+    </form>
+  </div>
+
+  <!-- Delete all data -->
+  <div class="card" style="border-color: #e8c0c0;">
+    <h2 class="card-title mb-8" style="color: var(--danger);">Delete all data</h2>
+    <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0 0 16px;">
+      Permanently delete all stakeholders, projects, interactions, patterns, and meeting preps.
+      This cannot be undone. Export your data first if you want a backup.
+    </p>
+    <form method="post" action="/settings/delete-all" onsubmit="return confirm('This will permanently delete ALL your data. Are you absolutely sure?')">
+      <div class="form-group mb-12">
+        <label for="confirm">Type DELETE to confirm</label>
+        <input type="text" id="confirm" name="confirm" class="form-control" style="max-width: 200px;"
+               placeholder="DELETE" autocomplete="off">
+      </div>
+      <button type="submit" class="btn btn-danger">Delete all data</button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

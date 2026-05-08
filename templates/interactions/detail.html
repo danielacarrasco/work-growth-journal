@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}{{ interaction.title }} — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/interactions">Interactions</a>
+    <span class="sep">/</span>
+    <span>{{ interaction.title }}</span>
+  </div>
+  <div class="flex-between">
+    <div>
+      <h1>{{ interaction.title }}</h1>
+      <p class="subtitle">
+        {{ interaction.date.strftime('%d %B %Y') }} &middot; {{ interaction.interaction_type }}
+        {% if interaction.project %} &middot; <a href="/projects/{{ interaction.project.id }}" style="color: var(--text-muted);">{{ interaction.project.name }}</a>{% endif %}
+      </p>
+    </div>
+    <div class="flex gap-8">
+      <a href="/interactions/{{ interaction.id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
+      <form method="post" action="/interactions/{{ interaction.id }}/delete" onsubmit="return confirm('Delete this interaction?')">
+        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+
+    <!-- Main detail -->
+    <div>
+
+      <!-- Stakeholders + status tags -->
+      <div class="flex gap-8 mb-16" style="flex-wrap: wrap;">
+        {% for s in interaction.stakeholders %}
+          <a href="/stakeholders/{{ s.id }}" class="tag">{{ s.name }}</a>
+        {% endfor %}
+        {% if interaction.shrink_expand_rating %}
+          <span class="tag se-{{ interaction.shrink_expand_rating }}" style="background:transparent; border-color: currentColor;">{{ interaction.shrink_expand_rating | replace('_',' ') }}</span>
+        {% endif %}
+        {% if interaction.needs_documentation %}
+          <span class="tag tag-warm">needs documentation</span>
+        {% endif %}
+      </div>
+
+      <!-- Readings -->
+      {% if interaction.tension_level or interaction.confidence_level or interaction.clarity_level %}
+      <div class="card mb-16" style="padding: 16px 20px;">
+        <div class="flex gap-16" style="flex-wrap:wrap;">
+          {% if interaction.tension_level %}
+          <div>
+            <span class="detail-label">Tension</span>
+            <div class="detail-value">{{ interaction.tension_level }}/5</div>
+          </div>
+          {% endif %}
+          {% if interaction.confidence_level %}
+          <div>
+            <span class="detail-label">Confidence</span>
+            <div class="detail-value">{{ interaction.confidence_level }}/5</div>
+          </div>
+          {% endif %}
+          {% if interaction.clarity_level %}
+          <div>
+            <span class="detail-label">Clarity</span>
+            <div class="detail-value">{{ interaction.clarity_level }}/5</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- What happened -->
+      <div class="card">
+        {% macro detail_field(label, value) %}
+          {% if value %}
+          <div class="detail-field">
+            <span class="detail-label">{{ label }}</span>
+            <div class="detail-value">{{ value }}</div>
+          </div>
+          {% endif %}
+        {% endmacro %}
+
+        {{ detail_field("Goal going in", interaction.user_goal) }}
+        {{ detail_field("What happened", interaction.what_happened) }}
+        {{ detail_field("What was said", interaction.what_was_said) }}
+        {{ detail_field("What was unsaid", interaction.what_was_unsaid) }}
+        {{ detail_field("Actual outcome", interaction.actual_outcome) }}
+
+        <hr class="divider">
+
+        {{ detail_field("Emotional response", interaction.emotional_response) }}
+        {{ detail_field("Leadership behaviour", interaction.leadership_behaviour) }}
+
+        <!-- Behaviour flags -->
+        {% set flags = [] %}
+        {% if interaction.did_overexplain %}{% set _ = flags.append("over-explained") %}{% endif %}
+        {% if interaction.did_soften_message %}{% set _ = flags.append("softened message") %}{% endif %}
+        {% if interaction.did_avoid_ask %}{% set _ = flags.append("avoided ask") %}{% endif %}
+        {% if interaction.did_hold_boundary %}{% set _ = flags.append("held boundary") %}{% endif %}
+        {% if interaction.did_claim_authority %}{% set _ = flags.append("claimed authority") %}{% endif %}
+        {% if flags %}
+        <div class="detail-field">
+          <span class="detail-label">Behaviour flags</span>
+          <div class="flex gap-8" style="flex-wrap:wrap; margin-top: 4px;">
+            {% for f in flags %}
+              <span class="tag {% if f in ['held boundary','claimed authority'] %}tag-accent{% else %}tag-warm{% endif %}">{{ f }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <hr class="divider">
+
+        {{ detail_field("What I wanted to say", interaction.what_i_wanted_to_say) }}
+        {{ detail_field("What I actually said", interaction.what_i_actually_said) }}
+        {{ detail_field("What I would do next time", interaction.what_i_would_do_next_time) }}
+      </div>
+
+      <!-- AI insight -->
+      {% if interaction.ai_insight %}
+      <div style="margin-top: 24px;">
+        <span class="ai-label">Self-pattern insight</span>
+        <div class="ai-output">{{ interaction.ai_insight }}</div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+
+      <!-- Next action -->
+      {% if interaction.next_action %}
+      <div class="card mb-16" style="border-left: 3px solid var(--accent);">
+        <span class="detail-label">Next action</span>
+        <p style="margin: 6px 0 0; font-size: 0.9rem;">{{ interaction.next_action }}</p>
+      </div>
+      {% endif %}
+
+      <!-- AI actions -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px;">
+        <span class="detail-label mb-8" style="display:block;">Generate analysis</span>
+        {% if ai_enabled %}
+          <form method="post" action="/interactions/{{ interaction.id }}/generate-insight" style="margin-bottom: 8px;">
+            <button type="submit" class="btn btn-secondary btn-sm w-full" style="justify-content:center;">
+              Generate self-pattern insight
+            </button>
+          </form>
+        {% else %}
+          <p class="text-muted text-small">Enable AI in <a href="/settings">Settings</a> to generate insights.</p>
+        {% endif %}
+        <a href="/patterns/generate-self" class="btn btn-ghost btn-sm w-full" style="justify-content:center; margin-top:4px;">
+          Analyse all recent patterns
+        </a>
+      </div>
+
+      <!-- Meeting prep suggestion -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 16px;">
+        <span class="detail-label mb-8" style="display:block;">Next step</span>
+        <a href="/meeting-prep/new" class="btn btn-secondary btn-sm w-full" style="justify-content:center;">
+          Prepare a follow-up meeting
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

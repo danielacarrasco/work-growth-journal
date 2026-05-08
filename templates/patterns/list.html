@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Patterns — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="flex-between">
+    <div>
+      <h1>Patterns</h1>
+      <p class="subtitle">What the data suggests. Possible patterns only — always grounded in evidence.</p>
+    </div>
+    <div class="flex gap-8">
+      {% if ai_enabled %}
+        <a href="/patterns/generate-self" class="btn btn-primary">Analyse recent patterns</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="page-body-wide">
+
+  {% set type_labels = {
+    'self_pattern': 'Self patterns',
+    'stakeholder_pattern': 'Stakeholder patterns',
+    'project_pattern': 'Project patterns',
+    'political_weather': 'Political weather',
+    'recommendation': 'Recommendations'
+  } %}
+
+  {% if grouped_insights %}
+    {% for insight_type, insights in grouped_insights.items() %}
+    <div style="margin-bottom: 36px;">
+      <h2 style="font-family: var(--font); font-size: 1rem; font-weight: normal; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">
+        {{ type_labels.get(insight_type, insight_type | replace('_',' ') | title) }}
+      </h2>
+      {% for insight in insights %}
+      <div class="insight-card">
+        <div class="flex-between mb-8">
+          <div>
+            <h3 style="margin: 0;">{{ insight.title }}</h3>
+            <span style="font-size: 0.78rem; color: var(--text-light);">
+              {{ insight.created_at.strftime('%d %b %Y') }}
+              &middot; {{ insight.confidence }} confidence
+              {% if insight.stakeholders %}
+                &middot; {{ insight.stakeholders | map(attribute='name') | join(', ') }}
+              {% endif %}
+            </span>
+          </div>
+          <div class="flex gap-8">
+            <form method="post" action="/patterns/{{ insight.id }}/archive">
+              <button type="submit" class="btn btn-ghost btn-sm">Archive</button>
+            </form>
+            <form method="post" action="/patterns/{{ insight.id }}/delete" onsubmit="return confirm('Delete this pattern insight?')">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </div>
+        </div>
+        {% if insight.summary %}
+        <div class="ai-output" style="font-size: 0.875rem; max-height: 300px; overflow-y: auto;">{{ insight.summary }}</div>
+        {% endif %}
+        {% if insight.evidence and insight.evidence != insight.summary %}
+        <details style="margin-top: 10px;">
+          <summary style="font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">Show full evidence</summary>
+          <div class="insight-evidence mt-8">{{ insight.evidence }}</div>
+        </details>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <p>No pattern insights yet.</p>
+      <p class="text-small text-muted" style="margin-bottom: 20px;">Log interactions and use the analysis tools to generate insights from your data.</p>
+      {% if ai_enabled %}
+        <a href="/patterns/generate-self" class="btn btn-primary">Generate self-pattern analysis</a>
+      {% else %}
+        <p class="text-small text-muted">Enable AI in <a href="/settings">Settings</a> to generate automatic insights.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Archived insights -->
+  {% if archived_insights %}
+  <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+    <details>
+      <summary style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer; margin-bottom: 16px;">
+        Archived insights ({{ archived_insights|length }})
+      </summary>
+      {% for insight in archived_insights %}
+      <div class="insight-card" style="opacity: 0.6;">
+        <div class="flex-between">
+          <div>
+            <span class="insight-type-badge">{{ insight.insight_type | replace('_',' ') }}</span>
+            <h3 style="margin: 0 0 4px;">{{ insight.title }}</h3>
+            <span style="font-size: 0.78rem; color: var(--text-light);">{{ insight.created_at.strftime('%d %b %Y') }}</span>
+          </div>
+          <form method="post" action="/patterns/{{ insight.id }}/delete" onsubmit="return confirm('Delete this?')">
+            <button type="submit" class="btn btn-ghost btn-sm">Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </details>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

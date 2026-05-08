@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/projects">Projects</a>
+    <span class="sep">/</span>
+    <span>{{ project.name }}</span>
+  </div>
+  <div class="flex-between">
+    <div>
+      <h1>{{ project.name }}</h1>
+      <p class="subtitle">
+        <span class="tag {% if project.strategic_importance == 'high' %}tag-accent{% endif %}">
+          {{ project.strategic_importance }} strategic importance
+        </span>
+      </p>
+    </div>
+    <div class="flex gap-8">
+      {% if ai_enabled %}
+      <form method="post" action="/projects/{{ project.id }}/generate-weather">
+        <button type="submit" class="btn btn-secondary btn-sm">Generate political weather</button>
+      </form>
+      {% endif %}
+      <a href="/projects/{{ project.id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
+      <form method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete {{ project.name }}?')">
+        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+
+    <!-- Main detail -->
+    <div>
+      <div class="card">
+        {% if project.description %}
+        <div class="detail-field">
+          <span class="detail-label">Description</span>
+          <div class="detail-value">{{ project.description }}</div>
+        </div>
+        <hr class="divider">
+        {% endif %}
+
+        {% if project.current_status %}
+        <div class="detail-field">
+          <span class="detail-label">Current status</span>
+          <div class="detail-value">{{ project.current_status }}</div>
+        </div>
+        {% endif %}
+
+        {% if project.desired_outcome %}
+        <div class="detail-field">
+          <span class="detail-label">Desired outcome</span>
+          <div class="detail-value">{{ project.desired_outcome }}</div>
+        </div>
+        {% endif %}
+
+        {% if project.main_tensions %}
+        <div class="detail-field">
+          <span class="detail-label">Main tensions</span>
+          <div class="detail-value">{{ project.main_tensions }}</div>
+        </div>
+        {% endif %}
+
+        {% if project.risks %}
+        <div class="detail-field">
+          <span class="detail-label">Risks</span>
+          <div class="detail-value">{{ project.risks }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Political weather -->
+      {% if project.political_weather %}
+      <div style="margin-top: 24px;">
+        <div class="flex-between mb-8">
+          <span class="ai-label">Political weather — based on logged interactions</span>
+          {% if ai_enabled %}
+          <form method="post" action="/projects/{{ project.id }}/generate-weather" style="margin:0;">
+            <button type="submit" class="btn btn-ghost btn-sm">Refresh</button>
+          </form>
+          {% endif %}
+        </div>
+        <div class="ai-output">{{ project.political_weather }}</div>
+      </div>
+      {% elif not ai_enabled %}
+      <div class="notice notice-warning mt-16">
+        AI is disabled. Enable it in <a href="/settings">Settings</a> to generate a political weather report.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+      <!-- Stakeholders involved -->
+      {% if stakeholders %}
+      <span class="home-section-title">Stakeholders involved</span>
+      <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px;">
+        {% for s in stakeholders %}
+        <li class="item-row" style="padding: 10px 16px;">
+          <div>
+            <p class="item-title" style="font-size:0.875rem;"><a href="/stakeholders/{{ s.id }}">{{ s.name }}</a></p>
+            <p class="item-meta">{{ s.role_title }}</p>
+          </div>
+          <span class="tag tag-muted" style="flex-shrink:0;">{{ s.relationship_type }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <!-- Recent interactions -->
+      <span class="home-section-title">Recent interactions</span>
+      {% if interactions %}
+        <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+          {% for i in interactions %}
+          <li class="item-row" style="padding: 10px 16px;">
+            <div>
+              <p class="item-title" style="font-size:0.875rem;"><a href="/interactions/{{ i.id }}">{{ i.title }}</a></p>
+              <p class="item-meta">{{ i.date.strftime('%d %b %Y') }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted text-small">No interactions linked to this project yet.</p>
+      {% endif %}
+
+      <a href="/interactions/new" class="btn btn-secondary btn-sm w-full mt-12" style="justify-content: center;">Log an interaction</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

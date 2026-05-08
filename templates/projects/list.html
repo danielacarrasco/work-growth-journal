@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Projects — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="flex-between">
+    <div>
+      <h1>Projects &amp; Contexts</h1>
+      <p class="subtitle">Active arenas where leadership matters.</p>
+    </div>
+    <a href="/projects/new" class="btn btn-primary">Add project</a>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  {% if projects %}
+    <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+      {% for p in projects %}
+      <li class="item-row">
+        <div style="flex:1;">
+          <p class="item-title"><a href="/projects/{{ p.id }}">{{ p.name }}</a></p>
+          <p class="item-meta">
+            {% if p.description %}{{ p.description[:100] }}{% if p.description|length > 100 %}…{% endif %}{% endif %}
+          </p>
+        </div>
+        <div class="flex gap-8" style="flex-shrink:0; align-items: center;">
+          <span class="tag {% if p.strategic_importance == 'high' %}tag-accent{% endif %}">
+            {{ p.strategic_importance }} importance
+          </span>
+          {% if p.interactions|length > 0 %}
+            <span class="tag tag-muted">{{ p.interactions|length }} interaction{% if p.interactions|length != 1 %}s{% endif %}</span>
+          {% endif %}
+          <a href="/projects/{{ p.id }}/edit" class="btn btn-ghost btn-sm">Edit</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <p>No projects or contexts added yet.</p>
+      <a href="/projects/new" class="btn btn-primary">Add your first project</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Home — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Work Mirror</h1>
+  <p class="subtitle">What is happening in the system, what is happening in me, and what is the cleanest move from here?</p>
+</div>
+
+<div class="page-body-wide">
+
+  <!-- Quick log prompt -->
+  <div class="home-prompt">
+    <p>What happened at work that matters?</p>
+    <div class="flex gap-8">
+      <a href="/interactions/new" class="btn btn-primary">Log an interaction</a>
+      <a href="/meeting-prep/new" class="btn btn-secondary">Prepare for a meeting</a>
+      <a href="/advisor" class="btn btn-secondary">Ask the Advisor</a>
+    </div>
+  </div>
+
+  <div class="home-grid">
+
+    <!-- Recent interactions -->
+    <div>
+      <span class="home-section-title">Recent interactions</span>
+      {% if recent_interactions %}
+        <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+          {% for i in recent_interactions %}
+          <li class="item-row">
+            <div>
+              <p class="item-title"><a href="/interactions/{{ i.id }}">{{ i.title }}</a></p>
+              <p class="item-meta">
+                {{ i.date.strftime('%d %b %Y') }} &middot; {{ i.interaction_type }}
+                {% if i.shrink_expand_rating and i.shrink_expand_rating != 'neutral' %}
+                  &middot; <span class="shrink-expand se-{{ i.shrink_expand_rating }}">{{ i.shrink_expand_rating | replace('_', ' ') }}</span>
+                {% endif %}
+              </p>
+            </div>
+            {% if i.needs_documentation %}
+              <span class="tag tag-warm" style="flex-shrink:0;">needs doc</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        <a href="/interactions" class="btn btn-ghost btn-sm mt-8">All interactions →</a>
+      {% else %}
+        <div class="card">
+          <p class="text-muted text-small" style="margin:0;">No interactions logged yet. Start by logging what happened at work.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right column -->
+    <div>
+
+      <!-- Upcoming meeting prep -->
+      <span class="home-section-title">Meeting prep</span>
+      {% if upcoming_preps %}
+        <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px;">
+          {% for prep in upcoming_preps %}
+          <li class="item-row">
+            <div>
+              <p class="item-title"><a href="/meeting-prep/{{ prep.id }}">{{ prep.meeting_title }}</a></p>
+              <p class="item-meta">
+                {% if prep.meeting_date %}{{ prep.meeting_date.strftime('%d %b') }}{% endif %}
+                {% if prep.generated_strategy %}&middot; <span style="color: var(--accent);">brief ready</span>{% else %}&middot; <span style="color: var(--accent-warm);">not yet prepared</span>{% endif %}
+              </p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="card mb-24">
+          <p class="text-muted text-small" style="margin:0;">No meeting preps. <a href="/meeting-prep/new" style="color: var(--accent);">Prepare for a meeting →</a></p>
+        </div>
+      {% endif %}
+
+      <!-- Latest insights -->
+      <span class="home-section-title">Latest patterns</span>
+      {% if latest_insights %}
+        {% for insight in latest_insights %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px;">
+          <span style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color: var(--text-muted);">{{ insight.insight_type | replace('_', ' ') }}</span>
+          <p style="margin: 4px 0 0; font-size: 0.9rem; color: var(--text);">{{ insight.title }}</p>
+        </div>
+        {% endfor %}
+        <a href="/patterns" class="btn btn-ghost btn-sm mt-4">All patterns →</a>
+      {% else %}
+        <div class="card">
+          <p class="text-muted text-small" style="margin:0;">No patterns yet. Log interactions and generate insights to see patterns emerge.</p>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  {% if not recent_interactions %}
+  <div style="margin-top: 32px; padding: 24px 0; border-top: 1px solid var(--border-light);">
+    <p class="text-muted text-small">New to Work Mirror? <a href="/settings/seed" style="color: var(--accent);" onclick="return confirm('Load example data to explore the app?')">Load example data</a> to see how it works, then delete it when you&rsquo;re ready to start your own log.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
