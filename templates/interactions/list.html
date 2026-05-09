@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Interactions — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="flex-between">
+    <div>
+      <h1>Interaction Log</h1>
+      <p class="subtitle">A record of what happened and how you showed up.</p>
+    </div>
+    <a href="/interactions/new" class="btn btn-primary">Log interaction</a>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  {% if interactions %}
+    <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+      {% for i in interactions %}
+      <li class="item-row">
+        <div style="flex:1;">
+          <p class="item-title"><a href="/interactions/{{ i.id }}">{{ i.title }}</a></p>
+          <p class="item-meta">
+            {{ i.date.strftime('%d %b %Y') }}
+            &middot; {{ i.interaction_type }}
+            {% if i.project %}&middot; <a href="/projects/{{ i.project.id }}" style="color: var(--text-muted);">{{ i.project.name }}</a>{% endif %}
+            {% if i.stakeholders %}
+              &middot;
+              {% for s in i.stakeholders[:3] %}{{ s.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+              {% if i.stakeholders|length > 3 %} +{{ i.stakeholders|length - 3 }}{% endif %}
+            {% endif %}
+          </p>
+        </div>
+        <div class="flex gap-8" style="flex-shrink:0; align-items:center;">
+          {% if i.shrink_expand_rating and i.shrink_expand_rating != 'neutral' %}
+            <span class="shrink-expand se-{{ i.shrink_expand_rating }} tag">{{ i.shrink_expand_rating | replace('_',' ') }}</span>
+          {% endif %}
+          {% if i.needs_documentation %}
+            <span class="tag tag-warm">needs doc</span>
+          {% endif %}
+          {% if i.tension_level %}
+            <span class="tag {% if i.tension_level >= 4 %}tag-danger{% elif i.tension_level >= 3 %}tag-warm{% endif %}">tension {{ i.tension_level }}</span>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <p>No interactions logged yet.</p>
+      <a href="/interactions/new" class="btn btn-primary">Log your first interaction</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

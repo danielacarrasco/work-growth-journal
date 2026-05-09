@@ -1,0 +1,4 @@
+work_mirror.db
+__pycache__/
+*.pyc
+.env

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{% if project %}Edit {{ project.name }}{% else %}New Project{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/projects">Projects</a>
+    <span class="sep">/</span>
+    <span>{% if project %}Edit{% else %}New{% endif %}</span>
+  </div>
+  <h1>{% if project %}Edit {{ project.name }}{% else %}Add project or context{% endif %}</h1>
+  <p class="subtitle">A project is any arena where leadership decisions and political dynamics matter.</p>
+</div>
+
+<div class="page-body">
+  <form method="post" action="{{ form_action }}">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Name *</label>
+        <input type="text" id="name" name="name" class="form-control" required
+               value="{{ project.name if project else '' }}" placeholder="e.g. MDG Platform, SteerCo Prep">
+      </div>
+      <div class="form-group">
+        <label for="strategic_importance">Strategic importance</label>
+        <select id="strategic_importance" name="strategic_importance" class="form-control">
+          {% for opt in ['low','medium','high'] %}
+            <option value="{{ opt }}" {% if (project and project.strategic_importance == opt) or (not project and opt == 'medium') %}selected{% endif %}>
+              {{ opt | title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" class="form-control" rows="2"
+        placeholder="Brief description of the project or context.">{{ project.description if project and project.description else '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="current_status">Current status</label>
+      <textarea id="current_status" name="current_status" class="form-control" rows="2"
+        placeholder="Where does this stand right now?">{{ project.current_status if project and project.current_status else '' }}</textarea>
+    </div>
+
+    <div class="form-section">
+      <p class="form-section-title">Dynamics</p>
+
+      <div class="form-group">
+        <label for="desired_outcome">Desired outcome</label>
+        <textarea id="desired_outcome" name="desired_outcome" class="form-control" rows="2"
+          placeholder="What does success look like?">{{ project.desired_outcome if project and project.desired_outcome else '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="main_tensions">Main tensions</label>
+        <textarea id="main_tensions" name="main_tensions" class="form-control" rows="3"
+          placeholder="What are the underlying disagreements, competing interests, or unsaid dynamics?">{{ project.main_tensions if project and project.main_tensions else '' }}</textarea>
+        <p class="hint">Be specific. "Who owns the allocation decision" is more useful than "alignment issues".</p>
+      </div>
+
+      <div class="form-group">
+        <label for="risks">Risks</label>
+        <textarea id="risks" name="risks" class="form-control" rows="2"
+          placeholder="What could go wrong? What are the fragile assumptions?">{{ project.risks if project and project.risks else '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="flex gap-8 mt-24">
+      <button type="submit" class="btn btn-primary btn-lg">{% if project %}Save changes{% else %}Create project{% endif %}</button>
+      <a href="{% if project %}/projects/{{ project.id }}{% else %}/projects{% endif %}" class="btn btn-secondary btn-lg">Cancel</a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

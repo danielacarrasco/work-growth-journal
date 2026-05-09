@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}{% if stakeholder %}Edit {{ stakeholder.name }}{% else %}New Stakeholder{% endif %} — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/stakeholders">Stakeholders</a>
+    <span class="sep">/</span>
+    <span>{% if stakeholder %}Edit{% else %}New{% endif %}</span>
+  </div>
+  <h1>{% if stakeholder %}Edit {{ stakeholder.name }}{% else %}Add stakeholder{% endif %}</h1>
+  <p class="subtitle">Keep descriptions behaviour-based. "Pushes for detail when delivery risk is high" — not "is difficult".</p>
+</div>
+
+<div class="page-body">
+  <form method="post" action="{{ form_action }}">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Name *</label>
+        <input type="text" id="name" name="name" class="form-control" required
+               value="{{ stakeholder.name if stakeholder else '' }}" placeholder="Full name">
+      </div>
+      <div class="form-group">
+        <label for="role_title">Role / title</label>
+        <input type="text" id="role_title" name="role_title" class="form-control"
+               value="{{ stakeholder.role_title if stakeholder else '' }}" placeholder="e.g. Head of Product">
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label for="team_or_area">Team or area</label>
+        <input type="text" id="team_or_area" name="team_or_area" class="form-control"
+               value="{{ stakeholder.team_or_area if stakeholder else '' }}" placeholder="e.g. Technology">
+      </div>
+      <div class="form-group">
+        <label for="influence_level">Influence level</label>
+        <select id="influence_level" name="influence_level" class="form-control">
+          {% for opt in ['low','medium','high','very_high'] %}
+            <option value="{{ opt }}" {% if (stakeholder and stakeholder.influence_level == opt) or (not stakeholder and opt == 'medium') %}selected{% endif %}>
+              {{ opt | replace('_',' ') | title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="trust_level">Trust level</label>
+        <select id="trust_level" name="trust_level" class="form-control">
+          {% for opt in ['low','medium','high','unknown'] %}
+            <option value="{{ opt }}" {% if (stakeholder and stakeholder.trust_level == opt) or (not stakeholder and opt == 'unknown') %}selected{% endif %}>
+              {{ opt | title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label for="relationship_type">Relationship type</label>
+        <select id="relationship_type" name="relationship_type" class="form-control">
+          {% for opt in ['ally','sponsor','blocker','operator','interpreter','peer','manager','direct_report','unknown'] %}
+            <option value="{{ opt }}" {% if (stakeholder and stakeholder.relationship_type == opt) or (not stakeholder and opt == 'unknown') %}selected{% endif %}>
+              {{ opt | replace('_',' ') | title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="preferred_detail_level">Preferred detail level</label>
+        <select id="preferred_detail_level" name="preferred_detail_level" class="form-control">
+          {% for opt in ['low','medium','high','unknown'] %}
+            <option value="{{ opt }}" {% if (stakeholder and stakeholder.preferred_detail_level == opt) or (not stakeholder and opt == 'unknown') %}selected{% endif %}>
+              {{ opt | title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="ambiguity_tolerance">Ambiguity tolerance</label>
+        <select id="ambiguity_tolerance" name="ambiguity_tolerance" class="form-control">
+          {% for opt in ['low','medium','high','unknown'] %}
+            <option value="{{ opt }}" {% if (stakeholder and stakeholder.ambiguity_tolerance == opt) or (not stakeholder and opt == 'unknown') %}selected{% endif %}>
+              {{ opt | title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Core profile -->
+    <div class="form-section">
+      <p class="form-section-title">Profile</p>
+
+      <div class="form-group">
+        <label for="stated_goals">Stated goals</label>
+        <textarea id="stated_goals" name="stated_goals" class="form-control" rows="2"
+          placeholder="What do they say they want to achieve?">{{ stakeholder.stated_goals if stakeholder and stakeholder.stated_goals else '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="likely_incentives">Likely incentives</label>
+        <textarea id="likely_incentives" name="likely_incentives" class="form-control" rows="2"
+          placeholder="What do they appear to actually care about? What pressures are they under?">{{ stakeholder.likely_incentives if stakeholder and stakeholder.likely_incentives else '' }}</textarea>
+        <p class="hint">Label as inference if not directly observed.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="communication_style">Communication style</label>
+        <textarea id="communication_style" name="communication_style" class="form-control" rows="2"
+          placeholder="How do they communicate? What format, tone, and level of detail do they prefer?">{{ stakeholder.communication_style if stakeholder and stakeholder.communication_style else '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Relationship dynamics -->
+    <div class="form-section">
+      <p class="form-section-title">Relationship dynamics</p>
+
+      <div class="form-group">
+        <label for="what_they_care_about">What they care about</label>
+        <textarea id="what_they_care_about" name="what_they_care_about" class="form-control" rows="2"
+          placeholder="What outcomes and concerns appear to drive their behaviour?">{{ stakeholder.what_they_care_about if stakeholder and stakeholder.what_they_care_about else '' }}</textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="what_they_resist">What they resist</label>
+          <textarea id="what_they_resist" name="what_they_resist" class="form-control" rows="2"
+            placeholder="What do they push back on or avoid?">{{ stakeholder.what_they_resist if stakeholder and stakeholder.what_they_resist else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="what_earns_trust">What earns trust</label>
+          <textarea id="what_earns_trust" name="what_earns_trust" class="form-control" rows="2"
+            placeholder="What actions or behaviours build credibility with them?">{{ stakeholder.what_earns_trust if stakeholder and stakeholder.what_earns_trust else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="tension_triggers">Tension triggers</label>
+        <textarea id="tension_triggers" name="tension_triggers" class="form-control" rows="2"
+          placeholder="In which situations does friction typically appear?">{{ stakeholder.tension_triggers if stakeholder and stakeholder.tension_triggers else '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-section">
+      <p class="form-section-title">Notes</p>
+      <div class="form-group">
+        <textarea id="notes" name="notes" class="form-control" rows="3"
+          placeholder="Anything else relevant. Context, history, open questions.">{{ stakeholder.notes if stakeholder and stakeholder.notes else '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="flex gap-8 mt-24">
+      <button type="submit" class="btn btn-primary btn-lg">{% if stakeholder %}Save changes{% else %}Create stakeholder{% endif %}</button>
+      <a href="{% if stakeholder %}/stakeholders/{{ stakeholder.id }}{% else %}/stakeholders{% endif %}" class="btn btn-secondary btn-lg">Cancel</a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Stakeholders — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="flex-between">
+    <div>
+      <h1>Stakeholders</h1>
+      <p class="subtitle">Behaviour-based profiles, not judgements.</p>
+    </div>
+    <a href="/stakeholders/new" class="btn btn-primary">Add stakeholder</a>
+  </div>
+</div>
+
+<div class="page-body-wide">
+  {% if stakeholders %}
+    <ul class="item-list" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden;">
+      {% for s in stakeholders %}
+      <li class="item-row">
+        <div style="flex:1;">
+          <p class="item-title"><a href="/stakeholders/{{ s.id }}">{{ s.name }}</a></p>
+          <p class="item-meta">
+            {% if s.role_title %}{{ s.role_title }}{% endif %}
+            {% if s.team_or_area %} &middot; {{ s.team_or_area }}{% endif %}
+          </p>
+        </div>
+        <div class="flex gap-8" style="flex-shrink:0; align-items: center;">
+          {% if s.relationship_type and s.relationship_type != 'unknown' %}
+            <span class="tag">{{ s.relationship_type }}</span>
+          {% endif %}
+          <span class="tag {% if s.influence_level in ['high', 'very_high'] %}tag-accent{% endif %}">
+            {{ s.influence_level | replace('_', ' ') }} influence
+          </span>
+          <span class="tag {% if s.trust_level == 'high' %}tag-accent{% elif s.trust_level == 'low' %}tag-danger{% endif %}">
+            {{ s.trust_level }} trust
+          </span>
+          <a href="/stakeholders/{{ s.id }}/edit" class="btn btn-ghost btn-sm">Edit</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <p>No stakeholders profiled yet.</p>
+      <a href="/stakeholders/new" class="btn btn-primary">Add your first stakeholder</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

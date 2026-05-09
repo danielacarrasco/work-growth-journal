@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Advisor — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Advisor</h1>
+  <p class="subtitle">Ask a specific question. Get a grounded answer from the perspective that matters most right now.</p>
+</div>
+
+<div class="page-body-wide">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+
+    <!-- Ask panel -->
+    <div>
+      <form method="post" action="/advisor">
+
+        <div class="form-group">
+          <label for="question">Your question or situation</label>
+          <textarea id="question" name="question" class="form-control" rows="5" required
+            placeholder="Be specific. E.g. 'I have a SteerCo tomorrow and I am worried about the allocation question coming up again. What is the cleanest move?'">{{ question if question else '' }}</textarea>
+          <p class="hint">The more specific and grounded, the better the response.</p>
+        </div>
+
+        <!-- Advisor voices -->
+        <div class="form-group">
+          <label>Advisor voices</label>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 12px;">Select the perspective(s) you want.</p>
+
+          {% set voice_labels = {
+            'strategist': ('Strategist', 'Incentives, power, timing, best next move'),
+            'reflector': ('Reflector', 'Emotional patterns, shrink/expand, avoidance'),
+            'operator': ('Operator', 'Execution, next steps, decisions, follow-through'),
+            'executive': ('Executive', 'Senior framing, business impact, decision rights'),
+            'friend': ('No-Bullshit Friend', 'Direct, honest, no fluff'),
+            'future_self': ('Future Self', 'What does the stronger version of you do?')
+          } %}
+
+          <div class="voice-grid">
+            {% for voice in advisor_voices %}
+            {% set label, desc = voice_labels.get(voice, (voice | title, '')) %}
+            <label class="voice-option {% if selected_voices is defined and voice in selected_voices %}selected{% elif voice == 'strategist' and (selected_voices is not defined or not selected_voices) %}selected{% endif %}"
+                   onclick="this.classList.toggle('selected')">
+              <input type="checkbox" name="advisor_voices" value="{{ voice }}"
+                     {% if selected_voices is defined and voice in selected_voices %}checked{% elif voice == 'strategist' and (selected_voices is not defined or not selected_voices) %}checked{% endif %}
+                     onchange="this.parentElement.classList.toggle('selected', this.checked)">
+              <span class="voice-name">{{ label }}</span>
+              <span class="voice-desc">{{ desc }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if not ai_enabled %}
+        <div class="notice notice-warning">
+          AI is disabled. Enable it in <a href="/settings">Settings</a> to use the Advisor.
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary btn-lg mt-16" {% if not ai_enabled %}disabled{% endif %}>
+          Ask
+        </button>
+      </form>
+    </div>
+
+    <!-- Response -->
+    <div>
+      {% if advisor_response %}
+        <span class="ai-label">
+          Response
+          {% if selected_voices is defined %}— {{ selected_voices | map('title') | join(', ') }}{% endif %}
+        </span>
+        <div class="ai-output">{{ advisor_response }}</div>
+      {% else %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 32px; text-align: center;">
+          <p style="font-family: var(--font); color: var(--text-muted); font-size: 1rem; margin: 0;">
+            The response will appear here.
+          </p>
+          <p class="text-muted text-small mt-16" style="margin-bottom: 0;">
+            The advisor draws on your recent interaction logs, so the more you have logged, the more grounded the response.
+          </p>
+        </div>
+
+        <!-- What the advisors do -->
+        <div style="margin-top: 24px;">
+          <span class="home-section-title">What each voice does</span>
+          {% set voice_descriptions = {
+            'strategist': 'Focuses on incentives, power dynamics, timing, sequencing, and the cleanest next move.',
+            'reflector': 'Looks at emotional patterns, where you shrink or expand, avoidance behaviours, and boundary-holding.',
+            'operator': 'Focuses on execution: what needs to happen, who owns it, and what gets documented.',
+            'executive': 'Brings senior framing: business impact, decision rights, operating model, risk.',
+            'friend': 'The direct version of what needs to be said. No softening. Not cruel, but honest.',
+            'future_self': 'Asks what the stronger, clearer version of you would do from here.'
+          } %}
+          {% for voice in advisor_voices %}
+          {% set label, desc = voice_labels.get(voice, (voice | title, '')) %}
+          <div style="padding: 10px 0; border-bottom: 1px solid var(--border-light);">
+            <span style="font-size: 0.85rem; font-weight: 500;">{{ label }}</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0;">{{ voice_descriptions.get(voice, '') }}</p>
+          </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

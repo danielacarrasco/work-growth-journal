@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Prepare a meeting — Work Mirror{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="/meeting-prep">Meeting Prep</a>
+    <span class="sep">/</span>
+    <span>New</span>
+  </div>
+  <h1>Prepare a meeting</h1>
+  <p class="subtitle">Set up the brief now. Generate the strategy once you&rsquo;ve filled in the context.</p>
+</div>
+
+<div class="page-body">
+  <form method="post" action="{{ form_action }}">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="meeting_title">Meeting title *</label>
+        <input type="text" id="meeting_title" name="meeting_title" class="form-control" required
+               value="{{ prep.meeting_title if prep else '' }}"
+               placeholder="e.g. MDG SteerCo, Perf conversation with Jamie">
+      </div>
+      <div class="form-group">
+        <label for="meeting_date">Date</label>
+        <input type="date" id="meeting_date" name="meeting_date" class="form-control"
+               value="{{ prep.meeting_date.strftime('%Y-%m-%d') if prep and prep.meeting_date else '' }}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="project_id">Project / Context</label>
+        <select id="project_id" name="project_id" class="form-control">
+          <option value="">— none —</option>
+          {% for p in projects %}
+            <option value="{{ p.id }}" {% if selected_project_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {% if stakeholders %}
+    <div class="form-group">
+      <label>Who will be there</label>
+      <div class="multi-select">
+        {% for s in stakeholders %}
+        <div class="multi-select-item">
+          <input type="checkbox" name="stakeholder_ids" value="{{ s.id }}" id="s_{{ s.id }}"
+                 {% if s.id in selected_stakeholder_ids %}checked{% endif %}>
+          <label for="s_{{ s.id }}">
+            {{ s.name }}
+            <span class="item-meta">{% if s.role_title %}{{ s.role_title }}{% endif %} &middot; {{ s.relationship_type }}</span>
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Objectives -->
+    <div class="form-section">
+      <p class="form-section-title">Objectives &amp; risks</p>
+
+      <div class="form-group">
+        <label for="desired_outcome">Desired outcome</label>
+        <textarea id="desired_outcome" name="desired_outcome" class="form-control" rows="2"
+          placeholder="What is the one thing you need to leave this meeting having achieved?">{{ prep.desired_outcome if prep and prep.desired_outcome else '' }}</textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="likely_resistance">Likely resistance</label>
+          <textarea id="likely_resistance" name="likely_resistance" class="form-control" rows="2"
+            placeholder="What will be pushed back on?">{{ prep.likely_resistance if prep and prep.likely_resistance else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="emotional_risk">Emotional risk</label>
+          <textarea id="emotional_risk" name="emotional_risk" class="form-control" rows="2"
+            placeholder="What might this meeting trigger in you?">{{ prep.emotional_risk if prep and prep.emotional_risk else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="what_i_am_tempted_to_do_badly">What I am tempted to do badly</label>
+        <textarea id="what_i_am_tempted_to_do_badly" name="what_i_am_tempted_to_do_badly" class="form-control" rows="2"
+          placeholder="Over-explain? Soften the message? Avoid making the ask? Name it.">{{ prep.what_i_am_tempted_to_do_badly if prep and prep.what_i_am_tempted_to_do_badly else '' }}</textarea>
+        <p class="hint">Naming it in advance reduces the chance of doing it.</p>
+      </div>
+    </div>
+
+    <!-- Advisor voices -->
+    <div class="form-section">
+      <p class="form-section-title">Advisor voices</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 16px;">Select one or more perspectives to inform the strategy brief.</p>
+
+      <div class="voice-grid">
+        {% set voice_labels = {
+          'strategist': ('Strategist', 'Incentives, power, timing, best next move'),
+          'reflector': ('Reflector', 'Emotional patterns, shrink/expand, avoidance'),
+          'operator': ('Operator', 'Execution, next steps, ownership, follow-through'),
+          'executive': ('Executive', 'Senior framing, business impact, decision rights'),
+          'friend': ('No-Bullshit Friend', 'Direct, honest, no fluff'),
+          'future_self': ('Future Self', 'What supports becoming a stronger leader?')
+        } %}
+        {% for voice in advisor_voices %}
+        {% set label, desc = voice_labels.get(voice, (voice | title, '')) %}
+        <label class="voice-option {% if voice in (selected_voices | default(['strategist'])) %}selected{% endif %}"
+               onclick="this.classList.toggle('selected')">
+          <input type="checkbox" name="advisor_voices" value="{{ voice }}"
+                 {% if voice in (selected_voices | default(['strategist'])) %}checked{% endif %}
+                 onchange="this.parentElement.classList.toggle('selected', this.checked)">
+          <span class="voice-name">{{ label }}</span>
+          <span class="voice-desc">{{ desc }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="flex gap-8 mt-24">
+      <button type="submit" class="btn btn-primary btn-lg">Save prep</button>
+      <a href="/meeting-prep" class="btn btn-secondary btn-lg">Cancel</a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}
