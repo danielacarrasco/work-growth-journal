@@ -1,12 +1,16 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from dotenv import load_dotenv
 
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./work_mirror.db")
+
+# Ensure the directory exists for absolute SQLite paths (e.g. Render persistent disk)
+if DATABASE_URL.startswith("sqlite:////"):
+    db_path = DATABASE_URL.replace("sqlite:////", "/")
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
 engine = create_engine(
     DATABASE_URL,
@@ -15,7 +19,9 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 def get_db():
