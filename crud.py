@@ -128,11 +128,15 @@ def create_interaction(db: Session, data: dict, stakeholder_ids: list, project_i
     return interaction
 
 
-def update_interaction(db: Session, interaction_id: int, data: dict, stakeholder_ids: list, project_id: Optional[int]) -> Optional[Interaction]:
+_UNSET = object()
+
+
+def update_interaction(db: Session, interaction_id: int, data: dict, stakeholder_ids: list = None, project_id=_UNSET) -> Optional[Interaction]:
     interaction = get_interaction(db, interaction_id)
     if not interaction:
         return None
-    data["project_id"] = project_id
+    if project_id is not _UNSET:
+        data["project_id"] = project_id
     for k, v in data.items():
         setattr(interaction, k, v)
     if stakeholder_ids is not None:
