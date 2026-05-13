@@ -51,6 +51,9 @@ def _get_client():
 def _call_openai(system: str, user: str, model: str = None) -> Optional[str]:
     client = _get_client()
     if not client:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return "[no-api-key]"
         return None
     try:
         response = client.chat.completions.create(
@@ -97,6 +100,8 @@ Generate a stakeholder profile update with these sections:
 Keep it behaviour-based. Do not diagnose. Do not judge. Describe what was observed."""
 
     result = _call_openai(SYSTEM_BASE, prompt, model)
+    if result == "[no-api-key]":
+        return _fallback_no_key()
     return result or _fallback_stakeholder_update()
 
 
@@ -138,6 +143,8 @@ Generate a political weather report with these sections:
 Be direct. If the evidence is thin, say so. End with one clear action."""
 
     result = _call_openai(SYSTEM_BASE, prompt, model)
+    if result == "[no-api-key]":
+        return _fallback_no_key()
     return result or _fallback_political_weather()
 
 
@@ -168,6 +175,8 @@ Use the phrasing: "Possible pattern" or "Based on interactions logged so far" wh
 Do not moralize. This is strategic self-awareness, not self-improvement."""
 
     result = _call_openai(SYSTEM_BASE, prompt, model)
+    if result == "[no-api-key]":
+        return _fallback_no_key()
     return result or _fallback_self_pattern()
 
 
@@ -230,6 +239,8 @@ Be specific. Ground every point in the data provided.
 If evidence is thin on any section, say so rather than speculating."""
 
     result = _call_openai(advisor_system, prompt, model)
+    if result == "[no-api-key]":
+        return _fallback_no_key()
     return result or _fallback_meeting_prep(meeting)
 
 
@@ -261,6 +272,8 @@ Question / situation:
 Respond drawing on the advisor voices specified. Be direct. End with a concrete next move."""
 
     result = _call_openai(advisor_system, prompt, model)
+    if result == "[no-api-key]":
+        return _fallback_no_key()
     return result or "Unable to generate response. Check your API key and connection."
 
 
@@ -392,3 +405,19 @@ Where can you genuinely move?
 What will you do in the 24 hours after this meeting?
 
 Enable AI in Settings to generate a full brief automatically."""
+
+
+def _fallback_no_key() -> str:
+    return """**OpenAI API key not configured.**
+
+AI is enabled in your settings, but no API key has been found.
+
+To fix this on Render:
+1. Go to your Render service → Environment
+2. Add the environment variable: `OPENAI_API_KEY` = your key from platform.openai.com
+3. Redeploy the service
+
+To fix this locally:
+1. Open your `.env` file
+2. Add: `OPENAI_API_KEY=sk-...`
+3. Restart the server"""
