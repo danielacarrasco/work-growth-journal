@@ -248,10 +248,13 @@ async def stakeholder_generate_update(
         for i in recent
     ]
 
-    summary = ai_service.generate_stakeholder_update(
-        stakeholder_dict, interactions_dicts, ai_on, settings.openai_model
-    )
-    crud.update_stakeholder(db, stakeholder_id, {"ai_summary": summary})
+    try:
+        summary = ai_service.generate_stakeholder_update(
+            stakeholder_dict, interactions_dicts, ai_on, settings.openai_model
+        )
+        crud.update_stakeholder(db, stakeholder_id, {"ai_summary": summary})
+    except Exception:
+        pass
     return RedirectResponse(f"/stakeholders/{stakeholder_id}", status_code=303)
 
 
@@ -413,10 +416,13 @@ async def project_generate_weather(
                     "what_they_resist": s.what_they_resist,
                 })
 
-    weather = ai_service.generate_political_weather(
-        project_dict, stakeholders_dicts, interactions_dicts, ai_on, settings.openai_model
-    )
-    crud.update_project(db, project_id, {"political_weather": weather})
+    try:
+        weather = ai_service.generate_political_weather(
+            project_dict, stakeholders_dicts, interactions_dicts, ai_on, settings.openai_model
+        )
+        crud.update_project(db, project_id, {"political_weather": weather})
+    except Exception:
+        pass
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
 
 
@@ -535,23 +541,24 @@ async def interaction_generate_insight(
         for x in recent
     ]
 
-    insight_text = ai_service.generate_self_pattern_insight(
-        interactions_dicts, ai_on, settings.openai_model
-    )
-    crud.update_interaction(db, interaction_id, {"ai_insight": insight_text})
-
-    # Also save as a pattern insight
-    crud.create_insight(
-        db,
-        data={
-            "insight_type": "self_pattern",
-            "title": f"Self-pattern from {i.date.strftime('%d %b %Y')} interactions",
-            "summary": insight_text[:500] + ("..." if len(insight_text) > 500 else ""),
-            "evidence": insight_text,
-            "confidence": "medium",
-        },
-        interaction_ids=[i.id],
-    )
+    try:
+        insight_text = ai_service.generate_self_pattern_insight(
+            interactions_dicts, ai_on, settings.openai_model
+        )
+        crud.update_interaction(db, interaction_id, {"ai_insight": insight_text})
+        crud.create_insight(
+            db,
+            data={
+                "insight_type": "self_pattern",
+                "title": f"Self-pattern from {i.date.strftime('%d %b %Y')} interactions",
+                "summary": insight_text[:500] + ("..." if len(insight_text) > 500 else ""),
+                "evidence": insight_text,
+                "confidence": "medium",
+            },
+            interaction_ids=[i.id],
+        )
+    except Exception:
+        pass
 
     return RedirectResponse(f"/interactions/{interaction_id}", status_code=303)
 
@@ -668,21 +675,23 @@ async def pattern_generate_self(request: Request, db: Session = Depends(get_db))
         for x in recent
     ]
 
-    insight_text = ai_service.generate_self_pattern_insight(
-        interactions_dicts, ai_on, settings.openai_model
-    )
-
-    crud.create_insight(
-        db,
-        data={
-            "insight_type": "self_pattern",
-            "title": f"Self-pattern analysis — {datetime.utcnow().strftime('%d %b %Y')}",
-            "summary": insight_text[:500] + ("..." if len(insight_text) > 500 else ""),
-            "evidence": insight_text,
-            "confidence": "medium",
-        },
-        interaction_ids=[i.id for i in recent[:5]],
-    )
+    try:
+        insight_text = ai_service.generate_self_pattern_insight(
+            interactions_dicts, ai_on, settings.openai_model
+        )
+        crud.create_insight(
+            db,
+            data={
+                "insight_type": "self_pattern",
+                "title": f"Self-pattern analysis — {datetime.utcnow().strftime('%d %b %Y')}",
+                "summary": insight_text[:500] + ("..." if len(insight_text) > 500 else ""),
+                "evidence": insight_text,
+                "confidence": "medium",
+            },
+            interaction_ids=[i.id for i in recent[:5]],
+        )
+    except Exception:
+        pass
     return RedirectResponse("/patterns", status_code=303)
 
 
@@ -810,12 +819,14 @@ async def meeting_prep_generate(
 
     advisor_voices = prep.advisor_voices.split(",") if prep.advisor_voices else ["strategist"]
 
-    brief = ai_service.generate_meeting_prep(
-        meeting_dict, stakeholders_dicts, project_dict,
-        interactions_dicts, advisor_voices, ai_on, settings.openai_model
-    )
-
-    crud.update_meeting_prep(db, prep_id, {"generated_strategy": brief})
+    try:
+        brief = ai_service.generate_meeting_prep(
+            meeting_dict, stakeholders_dicts, project_dict,
+            interactions_dicts, advisor_voices, ai_on, settings.openai_model
+        )
+        crud.update_meeting_prep(db, prep_id, {"generated_strategy": brief})
+    except Exception:
+        pass
     return RedirectResponse(f"/meeting-prep/{prep_id}", status_code=303)
 
 

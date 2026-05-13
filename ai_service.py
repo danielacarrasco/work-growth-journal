@@ -44,7 +44,7 @@ def _get_client():
         if not api_key:
             return None
         return OpenAI(api_key=api_key)
-    except ImportError:
+    except Exception:
         return None
 
 
