@@ -32,7 +32,15 @@
             <option value="{{ m }}" {% if settings.openai_model == m %}selected{% endif %}>{{ m }}</option>
           {% endfor %}
         </select>
-        <p class="hint">gpt-4o is recommended. Set your API key in the <code>.env</code> file.</p>
+        <p class="hint">
+          gpt-4o is recommended.
+          {% if ai_key_set %}
+            <span style="color: var(--accent); font-weight: 600;">&#10003; API key detected.</span>
+          {% else %}
+            <span style="color: var(--danger);">&#10007; No API key found.</span>
+            Add <code>OPENAI_API_KEY</code> to your environment variables (Render dashboard → Environment, or <code>.env</code> locally).
+          {% endif %}
+        </p>
       </div>
 
       <button type="submit" class="btn btn-primary">Save settings</button>

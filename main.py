@@ -928,6 +928,7 @@ async def advisor_ask(
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request, db: Session = Depends(get_db)):
     ctx = common_context(request, db)
+    ctx["ai_key_set"] = bool(os.getenv("OPENAI_API_KEY"))
     return templates.TemplateResponse("settings.html", ctx)
 
 
