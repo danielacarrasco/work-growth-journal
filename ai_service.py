@@ -37,25 +37,13 @@ Rules:
 """
 
 
-def _get_client():
+def _call_openai(system: str, user: str, model: str = None) -> str:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return "[no-api-key]"
     try:
         from openai import OpenAI
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            return None
-        return OpenAI(api_key=api_key)
-    except Exception:
-        return None
-
-
-def _call_openai(system: str, user: str, model: str = None) -> Optional[str]:
-    client = _get_client()
-    if not client:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            return "[no-api-key]"
-        return None
-    try:
+        client = OpenAI(api_key=api_key)
         response = client.chat.completions.create(
             model=model or OPENAI_MODEL,
             messages=[
@@ -274,7 +262,7 @@ Respond drawing on the advisor voices specified. Be direct. End with a concrete 
     result = _call_openai(advisor_system, prompt, model)
     if result == "[no-api-key]":
         return _fallback_no_key()
-    return result or "Unable to generate response. Check your API key and connection."
+    return result or "No response returned. Check your API key and model in Settings."
 
 
 def _format_interactions(interactions: list) -> str:
